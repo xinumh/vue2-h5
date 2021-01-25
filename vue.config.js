@@ -7,6 +7,11 @@ module.exports = {
         target: 'http://180.167.180.242:7866/mock/1886',
         changeOrigin: true, // needed for virtual hosted sites
         ws: true, // proxy websockets
+      },
+      '/demo': {
+        target: 'http://localhost:3000',
+        changeOrigin: true, // needed for virtual hosted sites
+        ws: true, // proxy websockets
       }
     }
   },

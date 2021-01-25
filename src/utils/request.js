@@ -21,7 +21,7 @@ const codeMessage = {
 
 const service = axios.create({
   baseURL: '/',
-  timeout: 5000 // request timeout
+  timeout: 600000 // request timeout
 })
 
 service.defaults.headers.post['Content-Type'] = 'application/json'
@@ -43,27 +43,23 @@ service.interceptors.response.use(
     if (code) {
       return response.data
     } else {
-      Toast.fail(errmsg)
+      Toast(errmsg)
       return Promise.reject(errmsg)
     }
   },
   error => {
+    console.log('error1', error)
     /** *** 接收到异常响应的处理开始 *****/
     const { response } = error
     if (response && response.status) {
-      const errorText = codeMessage[response.status] || response.statusText
-      // Toast.fail(errorText)
-      Toast({
-        type: 'fail',
-        message: errorText,
-        duration: 0
-      })
+      error.message = codeMessage[response.status] || response.statusText
     } else if (!response) {
-      Toast.fail('您的网络发生异常，无法连接服务器')
+      error.message = JSON.stringify(error).includes('timeout') ? '服务器响应超时，请重试' : error.message
     }
+    Toast(error.message)
     /** *** 处理结束 *****/
     // 如果不需要错误处理，以上的处理过程都可省略
-    return Promise.reject(error.response)
+    return Promise.reject(error.message)
   }
 )
 export default service

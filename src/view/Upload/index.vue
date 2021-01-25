@@ -7,6 +7,7 @@
             <template  v-if="query.type==='video'">
               <van-uploader v-show="!videoSrc" accept="video/*" :max-count="1" :before-read="beforeReadVideo" />
               <video v-show="videoSrc" controls class="videoBox" :src="videoSrc"></video>
+              <span v-if="videoSrc" class="videoClose" @click="handleDelVideo">x</span>
             </template>
             <template v-else-if="query.type==='img'">
               <van-uploader v-model="imgList" :max-count="1"/>
@@ -31,6 +32,7 @@
 <script>
 import { Button, Uploader, Form, Field, Overlay, Progress } from 'vant'
 import * as API from '@/api/upload'
+import axios from 'axios'
 export default {
   components: {
     [Button.name]: Button,
@@ -50,19 +52,18 @@ export default {
       query: {},
       show: false,
       percentage: 0,
+      timer: null,
+      source: null
     }
   },
   mounted () {
-    console.log('this.route', this.$route)
     const { query } = this.$route
     const { type } = query
     document.title = type === 'img' ? '图片上传' : '视频上传'
     this.query = query
-    console.log('API', API)
   },
   methods: {
     onSubmit () {
-      // this.show = true
       const { type } = this.query
       switch (type) {
         case 'img':
@@ -77,14 +78,20 @@ export default {
     },
     // 取消上传
     onCancel () {
+      this.source.cancel('上传已取消')
       this.show = false
     },
     handleOverLyClick () {
 
     },
+    handleDelVideo () {
+      this.videoSrc = ''
+      this.videoFile = ''
+    },
     // 上传视频
     async handleSubmitVideo () {
-      const file = this.videoFile
+      const that = this
+      const file = that.videoFile
       if (!file) {
         this.$toast('请选择视频')
         return
@@ -92,21 +99,20 @@ export default {
       const formData = new FormData()
       formData.append('file', file)
       this.show = true
-      setTimeout(() => {
-        this.show = false
-      }, 3000)
-      // const res = await API.videoUpload(formData).finally(() => { this.show = false })
-      // if (res) {
-      //   this.$toast('上传成功')
-      // }
+      that.source = axios.CancelToken.source()
+      function onUploadProgress (progressEvent) {
+        const percentage = (progressEvent.loaded / progressEvent.total * 100 | 0)
+        that.percentage = percentage
+      }
+      const res = await API.upload(formData, that.source, onUploadProgress).finally(() => { that.show = false })
+      if (res) {
+        that.$toast('上传成功')
+      }
     },
     // 上传图片
     async handleSubmitImg () {
-      console.log('this.imgList', this.imgList)
       const file = this.imgList[0] && this.imgList[0].file
-      console.log('file', file)
       if (!file) {
-        console.log('2', 2)
         this.$toast('请选择图片')
         return
       }
@@ -137,6 +143,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
+@import '@/style/mixin.less';
 .upload {
   height: 100vh;
   background: #F3F3F3;
@@ -151,28 +158,32 @@ export default {
   }
   .uploader {
     flex: 1;
-    display: flex;
-    align-content: center;
-    align-items: center;
+    .flex-center-self ();
+    .videoClose {
+      .block (40px, 40px, inline-block);
+      position: absolute;
+      right: 0;
+      top: 0;
+      background: #fff;
+      font-size: 40px;
+      line-height: 30px;
+      text-align: center;
+      border-bottom-left-radius: 40px;
+    }
   }
   .btn {
-    width: 648px;
-    height: 72px;
+    .block (648px, 72px);
     margin: 30px auto;
     border-radius: 16px;
   }
   .videoBox {
-    width: 700px;
+    width: 720px;
   }
   .wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    .flex-center();
     height: 100%;
     .content {
-      width: 274px;
-      height: 200px;
-      // background: #fff;
+      .block(274px, 200px);
       .desc {
         text-align: center;
         font-size: 24px;
