@@ -40,7 +40,7 @@ service.interceptors.response.use(
   response => {
     console.log('response', response)
     const { code, errmsg } = response.data
-    if (code) {
+    if (code === '1') {
       return response.data
     } else {
       Toast(errmsg)

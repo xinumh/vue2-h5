@@ -8,18 +8,18 @@ import '@/style/global.less'
 Vue.config.productionTip = false
 process.env.NODE_ENV === 'development' && new Vconsole()
 
-// const errorHandler = (event) => {
-//   console.error(event.reason)
-//   event.preventDefault()
-// }
+const errorHandler = (event) => {
+  console.error(event.reason)
+  // event.preventDefault()
+}
 
-// Vue.config.errorHandler = reason => {
-//   let defaultPrevented = false
-//   errorHandler({ reason, preventDefault: () => { defaultPrevented = true } })
-//   if (!defaultPrevented) throw reason
-// }
+Vue.config.errorHandler = reason => {
+  let defaultPrevented = false
+  errorHandler({ reason, preventDefault: () => { defaultPrevented = true } })
+  if (!defaultPrevented) throw reason
+}
 
-// window.addEventListener('unhandledrejection', errorHandler)
+window.addEventListener('unhandledrejection', errorHandler)
 
 new Vue({
   router,
